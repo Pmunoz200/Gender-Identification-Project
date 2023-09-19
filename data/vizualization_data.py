@@ -26,10 +26,10 @@ def load(pathname, vizualization=0):
 
 
 def histogram_1n(male, female, x_axis="", y_axis=""):
-    plt.xlim((min(min(male), min(female)) - 10, max(max(male), max(female)) + 10))
-    plt.hist(male, color="blue", alpha=alpha_val, label=class_label[0], density=True, bins=np.arange(male.min(), male.max()+1))
+    plt.xlim((min(min(male), min(female)) - 1, max(max(male), max(female)) + 1))
+    plt.hist(male, color="blue", alpha=alpha_val, label=class_label[0], density=True, bins=np.arange(male.min(), male.max()+2,1), edgecolor='grey')
     plt.hist(
-        female, color="red", alpha=alpha_val, label=class_label[1], density=True, bins=np.arange(female.min(), female.max() + 1)
+        female, color="red", alpha=alpha_val, label=class_label[1], density=True, bins=np.arange(female.min(), female.max()+2,1), edgecolor='grey'
     )
     plt.legend(class_label)
 
@@ -52,14 +52,7 @@ def graficar(attributes):
             attributes[i, labels == 1],
         ]
 
-    # for a in attribute_names:
-    #     histogram_1n(
-    #         values_histogram[a][0],
-    #         values_histogram[a][1],
-    #         x_axis=a,
-    #     )
 
-    # size1 = round(attributes.shape[0] / 2 + 0.5)
     cont = 1
     for xk, xv in values_histogram.items():
         for yk, yv in values_histogram.items():
@@ -130,7 +123,7 @@ if __name__ == "__main__":
     print(f"Attribute dimensions: {attributes.shape[0]}")
     print(f"Points on the dataset: {attributes.shape[1]}")
     print(
-        f"Distribution of labels (1, 0): {labels[labels==1].shape}, {labels[labels==0].shape}"
+        f"Distribution of labels (0, 1): {labels[labels==0].shape}, {labels[labels==1].shape}"
     )
     print(f"Possible classes: {class_label[0]}, {class_label[1]}")
 
