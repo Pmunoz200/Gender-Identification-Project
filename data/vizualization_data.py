@@ -79,7 +79,7 @@ def graficar(attributes):
         for yk, yv in values_histogram.items():
             if xk == yk:
                 histogram_1n(xv[0], xv[1], x_axis=xk)
-                plt.title(f"Feature {cont}")
+
                 plt.savefig(f"{os.getcwd()}/Image/histogram-dim-{cont}.png")
                 plt.show()
                 cont += 1
