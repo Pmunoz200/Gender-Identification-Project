@@ -32,15 +32,11 @@ def histogram_1n(male, female, x_axis="", y_axis=""):
         female, color="red", alpha=alpha_val, label=class_label[1], density=True, bins=np.arange(female.min(), female.max() + 1)
     )
     plt.legend(class_label)
-    # plt.xlabel(x_axis)
-    # plt.ylabel(y_axis)
 
 
 def scatter_2d(spoofed, authentic, x_axis="", y_axis=""):
     plt.scatter(spoofed[0], spoofed[1], edgecolors="blue", s=1.5,facecolors='none', alpha=alpha_val)
     plt.scatter(authentic[0], authentic[1], edgecolors="red", facecolors='none', s=1.5, alpha=alpha_val)
-    # plt.xlabel(x_axis)
-    # plt.ylabel(y_axis)
 
 
 def graficar(attributes):
@@ -77,36 +73,11 @@ def graficar(attributes):
             #     cont += 1
 
 
-def independent_graph(attributes):
-    attribute_names = []
-    for i in range(attributes.shape[0]):
-        attribute_names.append(f"Histogram dimension {i}")
-    values_histogram = {}
-
-    for i in range(len(attribute_names)):
-        values_histogram[attribute_names[i]] = [
-            attributes[i, labels == 0],
-            attributes[i, labels == 1],
-        ]
-
-    for a in attribute_names:
-        histogram_1n(
-            values_histogram[a][0],
-            values_histogram[a][1],
-            x_axis=a,
-        )
-    cont = 1
-    for yk, yv in values_histogram.items():
-        plt.subplot(6, 2, cont)
-        histogram_1n(yv[0], yv[1], x_axis=yk)
-        cont += 1
-    plt.show()
-
-
 def graf_LDA(attributes, lables):
 
     W, _ = ML.LDA1(attributes, lables, 1)
     LDA_attributes = np.dot(W.T, attributes)
+    print(LDA_attributes.shape)
     histogram_1n(LDA_attributes[0, labels==0], LDA_attributes[0, labels==1])
     plt.title("LDA Direction")
     plt.show()
@@ -124,7 +95,7 @@ def graf_PCA(attributes, lables):
         fractions.append(PCA_means/total_eig)
     fractions.append(1)
     plt.plot(range(1,13), fractions, marker='o')
-    # plt.plot(range(1,13), [0.95]*12, '--')
+    plt.plot(range(1,13), [0.97]*12, '--')
     plt.grid(True)
     plt.ylabel('Fraction of the retained variance')
     plt.xlabel('Number of dimensions')
@@ -138,14 +109,12 @@ def graph_corr(attributes,labels):
     plt.show()
     #correlation of males
     males = attributes[:, labels==0]
-    print(males.shape)
     corr_attr = np.corrcoef(males)
     sns.heatmap(corr_attr, cmap='Blues')
     plt.title("Male attribute correlation")
     plt.show()
     #correlation of females
     females= attributes[:, labels==1]
-    print(females.shape)
     corr_attr = np.corrcoef(females)
     sns.heatmap(corr_attr, cmap="Reds")
     plt.title("Female attribute correlation")

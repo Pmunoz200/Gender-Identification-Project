@@ -135,23 +135,6 @@ if __name__ == "__main__":
             tableKFold[cont].append([DCFnorm, minDCF])
 
         cont += 1
-        # for j in reversed(range(i)):
-        #     if j < 2:
-        #         break
-        #     tableKFold.append([f"PCA {i} LDA {j}"])
-        #     for model in headers:
-        #         [SPost, Predictions, accuracy, DCFnorm, minDCF] = ML.k_fold(
-        #             k_fold_value,
-        #             full_train_att,
-        #             full_train_label,
-        #             priorProb,
-        #             model=model,
-        #             PCA_m=i,
-        #             LDA_m=j,
-        #         )
-        #         tableKFold[cont].append([DCFnorm, minDCF])
-
-        #     cont += 1
 
     newHeaders = []
     print("PCA with k-fold")
