@@ -860,10 +860,10 @@ def k_fold(
         final_min_DCF += minDCF
         final_acc += acc
         final_S += S
-    final_acc = round(final_acc / k, 2)
+    final_acc = round(final_acc / k, 4)
     final_S /= k
-    final_DCF = round(final_DCF / k, 2)
-    final_min_DCF = round(final_min_DCF / k, 2)
+    final_DCF = round(final_DCF / k, 4)
+    final_min_DCF = round(final_min_DCF / k, 4)
     if model == "regression" and final:
         final_w /= k
         final_b /= k
