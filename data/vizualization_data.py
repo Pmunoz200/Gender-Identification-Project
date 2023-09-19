@@ -39,6 +39,7 @@ def scatter_2d(spoofed, authentic, x_axis="", y_axis=""):
     plt.scatter(authentic[0], authentic[1], edgecolors="red", facecolors='none', s=1.5, alpha=alpha_val)
 
 
+
 def graficar(attributes):
     attribute_names = []
     for i in range(attributes.shape[0]):

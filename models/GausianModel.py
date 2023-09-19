@@ -120,7 +120,7 @@ if __name__ == "__main__":
         tableKFold[0].append([DCFnorm, minDCF])
 
     cont = 1
-    for i in reversed(range(9,13)):
+    for i in reversed(range(8,13)):
 
         tableKFold.append([f"PCA {i}"])
         for model in headers:
