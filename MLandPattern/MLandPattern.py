@@ -689,7 +689,7 @@ def k_fold(
     l=0.001,
     pi=0.5,
     Cfn=1,
-    Cfp=10,
+    Cfp=1,
     final=0,
     quadratic=0,
 ):
@@ -712,11 +712,10 @@ def k_fold(
     :return final_S: matrix associated with the probability array
     """
     section_size = int(attributes.shape[1] / k)
-    cont = 0
     low = 0
     all_values = np.c_[attributes.T, labels]
     all_values = np.random.permutation(all_values)
-    attributes = all_values[:, 0:10].T
+    attributes = all_values[:, 0:12].T
     labels = all_values[:, -1].astype("int32")
     high = section_size
     model = model.lower()
@@ -783,7 +782,7 @@ def k_fold(
                     )
             confusion_matrix = ConfMat(prediction, validation_labels)
             DCF, DCFnorm = Bayes_risk(confusion_matrix, pi, Cfn, Cfp)
-            (minDCF, _, _) = minCostBayes(S, validation_labels, pi, Cfn, Cfp)
+            (minDCF, _, _, _) = minCostBayes(S, validation_labels, pi, Cfn, Cfp)
             final_DCF = DCFnorm
             final_min_DCF = minDCF
             final_acc = acc
@@ -856,7 +855,7 @@ def k_fold(
                 )
         confusion_matrix = ConfMat(prediction, validation_labels)
         DCF, DCFnorm = Bayes_risk(confusion_matrix, pi, Cfn, Cfp)
-        (minDCF, _, _) = minCostBayes(S, validation_labels, pi, Cfn, Cfp)
+        (minDCF, _, _, _) = minCostBayes(S, validation_labels, pi, Cfn, Cfp)
         final_DCF += DCFnorm
         final_min_DCF += minDCF
         final_acc += acc

@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import scipy
 import os
 from tabulate import tabulate
 import sys
@@ -49,116 +48,113 @@ if __name__ == "__main__":
 
     priorProb = ML.vcol(np.ones(2) * 0.5)
 
-    ### ------------- PCA WITH 2/3 SPLIT ---------------------- ####
-    (train_att, train_label), (test_att, test_labels) = ML.split_db(
-        full_train_att, full_train_label, 2 / 3
-    )
-    tablePCA.append(["Full"])
+    # ### ------------- PCA WITH 2/3 SPLIT ---------------------- ####
+    # (train_att, train_label), (test_att, test_labels) = ML.split_db(
+    #     full_train_att, full_train_label, 2 / 3
+    # )
+    # tablePCA.append(["Full"])
 
-    optMinDCF = 1000
-    optimal_t = 0
+    # optMinDCF = 1000
+    # optimal_t = 0
 
-    for model in headers:
-        [SPost, Predictions, accuracy] = ML.Generative_models(
-            train_att, train_label, test_att, priorProb, test_labels, model
-        )
-        confusion_matrix = ML.ConfMat(Predictions, test_labels)
-        DCF, DCFnorm = ML.Bayes_risk(confusion_matrix, pi, Cfn, Cfp)
-        (minDCF, FPRlist, FNRlist, t) = ML.minCostBayes(SPost, test_labels, pi, Cfn, Cfp)
-        optimal_t = t if optMinDCF > minDCF else optimal_t
-        tablePCA[0].append([accuracy, DCFnorm, minDCF])
-
-
-    cont = 1
-    for i in reversed(range(12)):
-        if i < 2:
-            break
-        P, reduced_train = ML.PCA(train_att, i)
-        reduced_test = np.dot(P.T, test_att)
-
-        tablePCA.append([f"PCA {i}"])
-        for model in headers:
-            [SPost, Predictions, accuracy] = ML.Generative_models(
-                reduced_train, train_label, reduced_test, priorProb, test_labels, model
-            )
-
-            confusion_matrix = ML.ConfMat(Predictions, test_labels)
-            DCF, DCFnorm = ML.Bayes_risk(confusion_matrix, pi, Cfn, Cfp)
-            (minDCF, FPRlist, FNRlist, t) = ML.minCostBayes(SPost, test_labels, pi, Cfn, Cfp)
-            optimal_t = t if optMinDCF > minDCF else optimal_t
-            tablePCA[cont].append([accuracy, DCFnorm, minDCF])
-        cont += 1
-        for j in reversed(range(i)):
-            if j < 2:
-                break
-            tablePCA.append([f"PCA {i} LDA {j}"])
-            W, _ = ML.LDA1(reduced_train, train_label, j)
-            LDA_train = np.dot(W.T, reduced_train)
-            LDA_test = np.dot(W.T, reduced_test)
-            for model in headers:
-                [SPost, Predictions, accuracy] = ML.Generative_models(
-                    LDA_train, train_label, LDA_test, priorProb, test_labels, model
-                )
-                confusion_matrix = ML.ConfMat(Predictions, test_labels)
-                DCF, DCFnorm = ML.Bayes_risk(confusion_matrix, pi, Cfn, Cfp)
-                (minDCF, FPRlist, FNRlist, t) = ML.minCostBayes(SPost, test_labels, pi, Cfn, Cfp)
-                optimal_t = t if optMinDCF < minDCF else optimal_t
-                tablePCA[cont].append([accuracy, DCFnorm, minDCF])
-            cont += 1
-    headersPCA = []
-    for i in headers:
-        headersPCA.append(i + " Acc/DCF/MinDCF")
-    print("PCA with a 2/3 split")
-    print(tabulate(tablePCA, headers=headersPCA))
-    print(optimal_t)
-
-    ### ------------- k-fold with different PCA ---------------------- ####
-    # headers = ["MVG", "Naive", "Tied Gaussian", "Tied Naive"]
-    # tableKFold.append(["Full"])
-    # print(f"Size of dataset: {full_train_att.shape[1]}")
-    # # k_fold_value = int(input("Value for k partitions: "))
-    # k_fold_value = 20
     # for model in headers:
-    #     [SPost, Predictions, accuracy, DCFnorm, minDCF] = ML.k_fold(
-    #         k_fold_value, full_train_att, full_train_label, priorProb, model=model
+    #     [SPost, Predictions, accuracy] = ML.Generative_models(
+    #         train_att, train_label, test_att, priorProb, test_labels, model
     #     )
-    #     tableKFold[0].append([accuracy, DCFnorm, minDCF])
-
+    #     confusion_matrix = ML.ConfMat(Predictions, test_labels)
+    #     DCF, DCFnorm = ML.Bayes_risk(confusion_matrix, pi, Cfn, Cfp)
+    #     (minDCF, FPRlist, FNRlist, t) = ML.minCostBayes(SPost, test_labels, pi, Cfn, Cfp)
+    #     optimal_t = t if optMinDCF > minDCF else optimal_t
+    #     tablePCA[0].append([DCFnorm, minDCF])
     # cont = 1
-    # for i in reversed(range(12)):
-    #     if i < 2:
-    #         break
+    # for i in reversed(range(6, 12)):
+    #     P, reduced_train = ML.PCA(train_att, i)
+    #     reduced_test = np.dot(P.T, test_att)
 
-    #     tableKFold.append([f"PCA {i}"])
+    #     tablePCA.append([f"PCA {i}"])
     #     for model in headers:
-    #         [SPost, Predictions, accuracy, DCFnorm, minDCF] = ML.k_fold(
-    #             k_fold_value,
-    #             full_train_att,
-    #             full_train_label,
-    #             priorProb,
-    #             model=model,
-    #             PCA_m=i,
+    #         [SPost, Predictions, accuracy] = ML.Generative_models(
+    #             reduced_train, train_label, reduced_test, priorProb, test_labels, model
     #         )
-    #         tableKFold[cont].append([accuracy, DCFnorm, minDCF])
 
+    #         confusion_matrix = ML.ConfMat(Predictions, test_labels)
+    #         DCF, DCFnorm = ML.Bayes_risk(confusion_matrix, pi, Cfn, Cfp)
+    #         (minDCF, FPRlist, FNRlist, t) = ML.minCostBayes(SPost, test_labels, pi, Cfn, Cfp)
+    #         optimal_t = t if optMinDCF > minDCF else optimal_t
+    #         tablePCA[cont].append([ DCFnorm, minDCF])
     #     cont += 1
     #     for j in reversed(range(i)):
     #         if j < 2:
     #             break
-    #         tableKFold.append([f"PCA {i} LDA {j}"])
+    #         tablePCA.append([f"PCA {i} LDA {j}"])
+    #         W, _ = ML.LDA1(reduced_train, train_label, j)
+    #         LDA_train = np.dot(W.T, reduced_train)
+    #         LDA_test = np.dot(W.T, reduced_test)
     #         for model in headers:
-    #             [SPost, Predictions, accuracy, DCFnorm, minDCF] = ML.k_fold(
-    #                 k_fold_value,
-    #                 full_train_att,
-    #                 full_train_label,
-    #                 priorProb,
-    #                 model=model,
-    #                 PCA_m=i,
-    #                 LDA_m=j,
+    #             [SPost, Predictions, accuracy] = ML.Generative_models(
+    #                 LDA_train, train_label, LDA_test, priorProb, test_labels, model
     #             )
-    #             tableKFold[cont].append([accuracy, DCFnorm, minDCF])
-
+    #             confusion_matrix = ML.ConfMat(Predictions, test_labels)
+    #             DCF, DCFnorm = ML.Bayes_risk(confusion_matrix, pi, Cfn, Cfp)
+    #             (minDCF, FPRlist, FNRlist, t) = ML.minCostBayes(SPost, test_labels, pi, Cfn, Cfp)
+    #             optimal_t = t if optMinDCF < minDCF else optimal_t
+    #             tablePCA[cont].append([DCFnorm, minDCF])
     #         cont += 1
+    # headersPCA = []
+    # for i in headers:
+    #     headersPCA.append(i + "DCF/MinDCF")
+    # print("PCA with a 2/3 split")
+    # print(tabulate(tablePCA, headers=headersPCA))
+    # print(optimal_t)
 
-    # print("PCA with k-fold")
-    # print(tabulate(tableKFold, headers=headers))
+    ### ------------- k-fold with different PCA ---------------------- ####
+    headers = ["MVG", "Naive", "Tied Gaussian", "Tied Naive"]
+    tableKFold.append(["Full"])
+    print(f"Size of dataset: {full_train_att.shape[1]}")
+    # k_fold_value = int(input("Value for k partitions: "))
+    k_fold_value = 10
+    for model in headers:
+        [SPost, Predictions, accuracy, DCFnorm, minDCF] = ML.k_fold(
+            k_fold_value, full_train_att, full_train_label, priorProb, model=model
+        )
+        tableKFold[0].append([DCFnorm, minDCF])
+
+    cont = 1
+    for i in reversed(range(9,13)):
+
+        tableKFold.append([f"PCA {i}"])
+        for model in headers:
+            [SPost, Predictions, accuracy, DCFnorm, minDCF] = ML.k_fold(
+                k_fold_value,
+                full_train_att,
+                full_train_label,
+                priorProb,
+                model=model,
+                PCA_m=i,
+            )
+            tableKFold[cont].append([DCFnorm, minDCF])
+
+        cont += 1
+        # for j in reversed(range(i)):
+        #     if j < 2:
+        #         break
+        #     tableKFold.append([f"PCA {i} LDA {j}"])
+        #     for model in headers:
+        #         [SPost, Predictions, accuracy, DCFnorm, minDCF] = ML.k_fold(
+        #             k_fold_value,
+        #             full_train_att,
+        #             full_train_label,
+        #             priorProb,
+        #             model=model,
+        #             PCA_m=i,
+        #             LDA_m=j,
+        #         )
+        #         tableKFold[cont].append([DCFnorm, minDCF])
+
+        #     cont += 1
+
+    newHeaders = []
+    print("PCA with k-fold")
+    for i in headers:
+        newHeaders.append(i + " DCF/MinDCF")
+    print(tabulate(tableKFold, headers=newHeaders))
