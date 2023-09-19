@@ -54,11 +54,33 @@ def graficar(attributes):
 
 
     cont = 1
+    # dims = [9, 3]
+
+    # d_ant = 0
+    # for d in dims:
+    #     length = int(d/3)
+    #     for i in range(d_ant, d + d_ant):
+    #         plt.subplot(length, 3, cont)
+    #         histogram_1n(values_histogram[attribute_names[i]][0],values_histogram[attribute_names[i]][1])
+    #         plt.title(f"Features Dim. {i+1}")
+    #         plt.subplots_adjust(left=0.05,
+    #                 bottom=0.11,
+    #                 right=0.963,
+    #                 top=0.88,
+    #                 wspace=0.17,
+    #                 hspace=0.265)
+    #         cont += 1
+    #     plt.savefig(f"{os.getcwd()}/Image/histograms-{d}.png")
+    #     plt.show()
+    #     cont = 1
+    #     d_ant=d
+
     for xk, xv in values_histogram.items():
         for yk, yv in values_histogram.items():
             if xk == yk:
                 histogram_1n(xv[0], xv[1], x_axis=xk)
                 plt.title(f"Feature {cont}")
+                plt.savefig(f"{os.getcwd()}/Image/histogram-dim-{cont}.png")
                 plt.show()
                 cont += 1
             # else:
@@ -74,6 +96,7 @@ def graf_LDA(attributes, lables):
     print(LDA_attributes.shape)
     histogram_1n(LDA_attributes[0, labels==0], LDA_attributes[0, labels==1])
     plt.title("LDA Direction")
+    plt.savefig(f"{os.getcwd()}/Image/LDA-direction.png")
     plt.show()
 
 def graf_PCA(attributes, lables):
@@ -93,6 +116,8 @@ def graf_PCA(attributes, lables):
     plt.grid(True)
     plt.ylabel('Fraction of the retained variance')
     plt.xlabel('Number of dimensions')
+    plt.title("PCA variability analysis")
+    plt.savefig(f"{os.getcwd()}/Image/PCA-Analysis.png")
     plt.show()
 
 def graph_corr(attributes,labels):
@@ -100,17 +125,20 @@ def graph_corr(attributes,labels):
     corr_attr = np.corrcoef(attributes)
     sns.heatmap(corr_attr, cmap='Greens')
     plt.title("Total attribute correlation")
+    plt.savefig(f"{os.getcwd()}/Image/Dataset-correlation.png")
     plt.show()
     #correlation of males
     males = attributes[:, labels==0]
     corr_attr = np.corrcoef(males)
     sns.heatmap(corr_attr, cmap='Blues')
     plt.title("Male attribute correlation")
+    plt.savefig(f"{os.getcwd()}/Image/Male-correlation.png")
     plt.show()
     #correlation of females
     females= attributes[:, labels==1]
     corr_attr = np.corrcoef(females)
     sns.heatmap(corr_attr, cmap="Reds")
+    plt.savefig(f"{os.getcwd()}/Image/Female-correlation.png")
     plt.title("Female attribute correlation")
     plt.show()
 
