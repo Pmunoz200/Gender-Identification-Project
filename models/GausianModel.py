@@ -36,41 +36,48 @@ def split_db(D, L, fraction, seed=0):
     return (DTR, LTR), (DTE, LTE)
 
 
-def gaussian_train(attributes, labels, pi=0.5, Cfn=1, Cfp=1):
+def gaussian_train(attributes, labels, priorProb = 0, pi=[0.5], Cfn=1, Cfp=1):
     ### Parameter definition ###
     tableKFold = []
     headers = ["MVG", "Naive", "Tied Gaussian", "Tied Naive"]
+    priorProb = ML.vcol(np.ones(2) * 0.5) if not priorProb else priorProb
     ####
     tableKFold.append(["Full"])
     # k_fold_value = int(input("Value for k partitions: "))
-    k_fold_value = 10
+    k_fold_value = 5
+    c2 = 1
     for model in headers:
-        [SPost, Predictions, accuracy, DCFnorm, minDCF] = ML.k_fold(
-            k_fold_value, attributes, labels, priorProb, model=model
-        )
-        tableKFold[0].append([DCFnorm, minDCF])
+        tableKFold[0].append([])
+        for p in pi:
+            [SPost, Predictions, accuracy, DCFnorm, minDCF] = ML.k_fold(
+                k_fold_value, attributes, labels, priorProb, model=model, pi=p
+            )
+            tableKFold[0][c2].append(minDCF)
+        c2 += 1
 
     cont = 1
     for i in reversed(range(9,13)):
-
         tableKFold.append([f"PCA {i}"])
+        c2 = 1
         for model in headers:
-            [SPost, Predictions, accuracy, DCFnorm, minDCF] = ML.k_fold(
-                k_fold_value,
-                attributes,
-                labels,
-                priorProb,
-                model=model,
-                PCA_m=i,
-            )
-            tableKFold[cont].append([DCFnorm, minDCF])
-
+            tableKFold[cont].append([])
+            for p in pi:
+                [_, _, _, DCFnorm, minDCF] = ML.k_fold(
+                    k_fold_value,
+                    attributes,
+                    labels,
+                    priorProb,
+                    model=model,
+                    PCA_m=i,
+                )
+                tableKFold[cont][c2].append(minDCF)
+            c2 += 1
         cont += 1
 
     newHeaders = []
     print("PCA with k-fold")
     for i in headers:
-        newHeaders.append(i + " DCF/MinDCF")
+        newHeaders.append(i + " MinDCF" + " ".join(str(p) for p in pi))
     print(tabulate(tableKFold, headers=newHeaders))
 
 
@@ -78,12 +85,11 @@ if __name__ == "__main__":
     path = os.path.abspath("data/Train.txt")
     [full_train_att, full_train_label] = load(path)
 
-    priorProb = ML.vcol(np.ones(2) * 0.5)
 
     standard_deviation = np.std(full_train_att)
     z_data = ML.center_data(full_train_att) / standard_deviation
 
     print("Full dataset")
-    gaussian_train(full_train_att, full_train_label)
+    gaussian_train(full_train_att, full_train_label, pi=[0.3,0.5,0.7])
     print("Z-Norm dataset")
-    gaussian_train(z_data, full_train_label)
+    gaussian_train(z_data, full_train_label,pi=[0.3,0.5,0.7])
