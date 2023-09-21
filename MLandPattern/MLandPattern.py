@@ -769,6 +769,9 @@ def k_fold(
                         previous_prob,
                         validation_labels,
                         model,
+                        niter=niter,
+                        psi=psi,
+                        alpha=alpha,
                         final=final,
                     )
                     final_w = P
@@ -782,6 +785,9 @@ def k_fold(
                         previous_prob,
                         validation_labels,
                         model,
+                        niter=niter,
+                        psi=psi,
+                        alpha=alpha
                     )
             confusion_matrix = ConfMat(prediction, validation_labels)
             DCF, DCFnorm = Bayes_risk(confusion_matrix, pi, Cfn, Cfp)
@@ -842,6 +848,9 @@ def k_fold(
                     previous_prob,
                     validation_labels,
                     model,
+                    niter=niter,
+                    psi=psi,
+                    alpha=alpha,
                     final=final,
                 )
                 final_mu += mu
