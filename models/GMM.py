@@ -41,37 +41,42 @@ def split_db(D, L, fraction, seed=0):
 
     return (DTR, LTR), (DTE, LTE)
 
-def call_GMM(attributes, labels, prior_probability, models, k_value=5, m = 0):
+def call_GMM(attributes, labels, prior_probability, models, k_value=5, m = 0, pi = [0.5]):
     tableGMM = []
-    total_iter = len(models)
+    total_iter = len(models)*len(pi)
     perc = 0
 
     ### ------------- K-FOLD CROSS-VALIDATION AND PCA ---------------------- ####
     tableGMM.append(["Full"])
     result_minDCF = []
+    c2 = 1
     for model in models:
         ref = model.split(":")
         mod = ref[0]
         constrains = eval(ref[1])
-        if not m:
-            [SPost, Predictions, accuracy, _, minDCF] = ML.k_fold(
-            k_value, attributes, labels, prior_probability, model=mod, niter=constrains[1],alpha=constrains[0], psi=constrains[2]
-            )
-        else:
-            [SPost, Predictions, accuracy, _, minDCF] = ML.k_fold(
-            k_value, attributes, labels, prior_probability, model=mod, niter=constrains[1],alpha=constrains[0], psi=constrains[2], PCA_m=m
-            )
-        perc += 1
-        print(f"{round(perc * 100 / total_iter, 2)}%")
-        tableGMM[0].append(minDCF)
+        tableGMM[0].append([])
+        for p in pi:
+            if not m:
+                [SPost, Predictions, accuracy, _, minDCF] = ML.k_fold(
+                k_value, attributes, labels, prior_probability, model=mod, niter=constrains[1],alpha=constrains[0], psi=constrains[2], pi=p
+                )
+            else:
+                [SPost, Predictions, accuracy, _, minDCF] = ML.k_fold(
+                k_value, attributes, labels, prior_probability, model=mod, niter=constrains[1],alpha=constrains[0], psi=constrains[2], PCA_m=m, pi=p
+                )
+            tableGMM[0][c2].append(minDCF)
+            perc += 1
+            print(f"{round(perc * 100 / total_iter, 2)}%")
+        print(tableGMM)
         result_minDCF.append(minDCF)
+        c2 += 1
     print()
     cont = 1
     print("minDCF table")
-    print(tabulate(tableGMM, headers=headers[0:3]))
+    print(tabulate(tableGMM, headers=models[0:3]))
     return result_minDCF
 
-def graph_data(raw_results, z_results, model):
+def graph_data(raw_results, z_results, model, pca = 0):
     attribute = {
     "Raw": raw_results,
     "Z-Score": z_results
@@ -99,7 +104,10 @@ def graph_data(raw_results, z_results, model):
     ax.set_xticks(x + width/2, labels)
     ax.legend(loc='upper left', ncols=3)
     ax.set_ylim(0, maxVal + 0.1)
-    plt.savefig(f"{os.getcwd()}/Image/GMM-{model}-PCA.png")
+    if pca != 0:
+        plt.savefig(f"{os.getcwd()}/Image/GMM-{model}-PCA.png")
+    else:
+        plt.savefig(f"{os.getcwd()}/Image/GMM-{model}.png")
     plt.show()
 
 
@@ -107,18 +115,27 @@ if __name__ == "__main__":
     path = os.path.abspath("data/Train.txt")
     [full_train_att, full_train_label] = load(path)
     priorProb = ML.vcol(np.ones(2) * 0.5)
+
+    # The headers define which models the code will train. It is a list of all the models to try, and the format is:
+    # [model: [alpha, G, psi]], where psi and alpha are hyperparameters, and G corresponds to the amount of clusters,
+    # which are defined as 2^G.
+
     headers = [
-    "GMM:[0.1, 0, 0.01]",
-    "GMM:[0.1, 1, 0.01]",
-    "GMM:[0.1, 2, 0.01]",
-    "GMM:[0.1, 3, 0.01]",
-    "GMM:[0.1, 4, 0.01]",
-    "GMM:[0.1, 5, 0.01]",
+    "Diagonal:[0.1, 2, 0.01]",
     ]
+    # headers = [
+    # "GMM:[0.1, 0, 0.01]",
+    # "GMM:[0.1, 1, 0.01]",
+    # "GMM:[0.1, 2, 0.01]",
+    # "GMM:[0.1, 3, 0.01]",
+    # "GMM:[0.1, 4, 0.01]",
+    # "GMM:[0.1, 5, 0.01]",
+    # ]
+    pi = [0.3, 0.5, 0.7]
     standard_deviation = np.std(full_train_att)
     z_data = ML.center_data(full_train_att) / standard_deviation
     print("Full data")
-    raw_values = call_GMM(full_train_att, full_train_label, priorProb, models=headers, m=12)
+    raw_values = call_GMM(full_train_att, full_train_label, priorProb, m=12, models=headers)
     print("Z-norm data")
-    z_values = call_GMM(z_data, full_train_label, priorProb, models=headers, m=12)
-    graph_data(raw_values, z_values, headers[0][0:3])
+    z_values = call_GMM(z_data, full_train_label, priorProb, m=12, models=headers)
+    graph_data(raw_values, z_values, headers[0][0:3], pca=1)
