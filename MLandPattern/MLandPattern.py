@@ -692,6 +692,9 @@ def k_fold(
     Cfp=1,
     final=0,
     quadratic=0,
+    niter=0,
+    alpha=0,
+    psi=0,
 ):
     """
     Applies a k-fold cross validation on the dataset, applying the specified model.
@@ -852,6 +855,9 @@ def k_fold(
                     previous_prob,
                     validation_labels,
                     model,
+                    niter=niter,
+                    psi=psi,
+                    alpha=alpha
                 )
         confusion_matrix = ConfMat(prediction, validation_labels)
         DCF, DCFnorm = Bayes_risk(confusion_matrix, pi, Cfn, Cfp)
