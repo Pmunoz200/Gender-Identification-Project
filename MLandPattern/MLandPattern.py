@@ -692,6 +692,7 @@ def k_fold(
     Cfp=1,
     final=0,
     quadratic=0,
+    pit=0.5,
     niter=0,
     alpha=0,
     psi=0,
@@ -745,6 +746,7 @@ def k_fold(
                         validation_labels,
                         final=1,
                         quadratic=quadratic,
+                        pit=pit
                     )
                     final_w = w
                     final_b = b
@@ -759,6 +761,7 @@ def k_fold(
                         validation_att,
                         validation_labels,
                         quadratic=quadratic,
+                        pit=pit
                     )
             else:
                 if final:
@@ -824,6 +827,7 @@ def k_fold(
                     validation_labels,
                     final=1,
                     quadratic=quadratic,
+                    pit=pit
                 )
                 final_w += w
                 final_b += b
@@ -838,6 +842,7 @@ def k_fold(
                     validation_att,
                     validation_labels,
                     quadratic=quadratic,
+                    pit=pit
                 )
         else:
             if final:
@@ -924,7 +929,7 @@ def k_fold(
         return final_S, prediction, final_acc, final_DCF, final_min_DCF
 
 
-def logreg_obj(v, DTR, LTR, l):
+def logreg_obj(v, DTR, LTR, l, pit):
     """
     Method to calculate the error of a function based on the data points
     :param v: Vector of the values to evaluate [w, b]
@@ -933,13 +938,32 @@ def logreg_obj(v, DTR, LTR, l):
     :param l: Hyperparameter l to apply to the function
     :return: retFunc the value of evaluating the function on the input parameter v
     """
-    n = DTR.shape[1]
+   
+    nt = np.count_nonzero(LTR == 1)
+    nf = np.count_nonzero(LTR != 1)
     w, b = v[0:-1], v[-1]
-    log_sum = 0
     zi = LTR * 2 - 1
-    inter_sol = -zi * (np.dot(w.T, DTR) + b)
-    log_sum = np.sum(np.logaddexp(0, inter_sol))
-    retFunc = l / 2 * np.power(np.linalg.norm(w), 2) + 1 / n * log_sum
+    
+   
+    
+    male = DTR[:,LTR == 0]
+    female = DTR[:,LTR == 1]
+
+    log_sumt = 0
+    log_sumf = 0
+    zif = zi[zi == -1]
+    zit = zi[zi == 1]
+    
+    
+    
+    inter_sol = -zit * (np.dot(w.T, female) + b)
+    log_sumt = np.sum(np.logaddexp(0, inter_sol))
+
+    inter_sol = -zif * (np.dot(w.T, male) + b)
+    log_sumf = np.sum(np.logaddexp(0, inter_sol))
+    retFunc = l / 2 * np.power(np.linalg.norm(w), 2) + pit / nt * log_sumt + (1-pit)/nf * log_sumf
+   
+    
     return retFunc
 
 
@@ -951,6 +975,7 @@ def binaryRegression(
     test_labels,
     final=0,
     quadratic=0,
+    pit=0.5
 ):
     """
     Method to calculate the error of a function based on the data points
@@ -963,6 +988,7 @@ def binaryRegression(
     :return predictions: Vector associated with the prediction of the class for each test data point
     :return acc: Accuracy of the validation set
     """
+    
     if quadratic == 1:
         xxt = np.dot(train_attributes.T, train_attributes).diagonal().reshape((1, -1))
         train_attributes = np.vstack((xxt, train_attributes))
@@ -971,7 +997,7 @@ def binaryRegression(
         test_attributes = np.vstack((zzt, test_attributes))
     x0 = np.zeros(train_attributes.shape[0] + 1)
     x, f, d = scipy.optimize.fmin_l_bfgs_b(
-        logreg_obj, x0, approx_grad=True, args=(train_attributes, train_labels, l)
+        logreg_obj, x0, approx_grad=True, args=(train_attributes, train_labels, l, pit)
     )
     w, b = x[0:-1], x[-1]
     S = np.dot(w.T, test_attributes) + b
@@ -1047,6 +1073,8 @@ def svm(
     gamma=1,
     eps=0,
     final=0,
+    pit=0.5,
+    pitemp=0.7
 ):
     """
     Apply the Support Vector Machine model, using either one of the models described to approximate the soluction.
@@ -1067,6 +1095,13 @@ def svm(
     """
     alp = np.ones(training_att.shape[1])
     constrain = np.array([(0, constrain)] * training_att.shape[1])
+    TL=np.array(training_labels)
+    TL = TL.reshape(-1, 1)
+    pitempM=1-pitemp
+    pitempF=pitemp
+    pitM=1-pit
+    pitF=pit
+    constrain= np.where(TL==0, constrain*(pitM/pitempM), constrain*(pitF/pitempF))
     [x, f, d] = scipy.optimize.fmin_l_bfgs_b(
         dual_svm,
         alp,
