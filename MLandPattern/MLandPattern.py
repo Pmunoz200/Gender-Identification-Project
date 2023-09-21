@@ -1086,13 +1086,13 @@ def svm(
     """
     alp = np.ones(training_att.shape[1])
     constrain = np.array([(0, constrain)] * training_att.shape[1])
-    # TL=np.array(training_labels)
-    # TL = TL.reshape(-1, 1)
-    # pitempM=1-pitemp
-    # pitempF=pitemp
-    # pitM=1-pit
-    # pitF=pit
-    # constrain= np.where(TL==0, constrain*(pitM/pitempM), constrain*(pitF/pitempF))
+    TL=np.array(training_labels)
+    TL = TL.reshape(-1, 1)
+    pitempM=1-pitemp
+    pitempF=pitemp
+    pitM=1-pit
+    pitF=pit
+    constrain= np.where(TL==0, constrain*(pitM/pitempM), constrain*(pitF/pitempF))
     [x, f, d] = scipy.optimize.fmin_l_bfgs_b(
         dual_svm,
         alp,
