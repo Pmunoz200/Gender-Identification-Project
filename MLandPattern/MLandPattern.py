@@ -881,10 +881,8 @@ def k_fold(
         final_DCF += DCFnorm
         final_min_DCF += minDCF
         final_acc += acc
-        print(S.shape)
         final_S = np.hstack((final_S, S))
         final_predictions = np.append(final_predictions, prediction)
-        print(final_S.shape)
     # (_, FPRlist, FNRlist, _) = minCostBayes(final_S, labels, pi, Cfn, Cfp)
     # ROCcurve(FPRlist, FNRlist)
     final_acc = round(final_acc / k, 4)
@@ -892,7 +890,7 @@ def k_fold(
     final_DCF = round(final_DCF / k, 4)
     final_min_DCF = round(final_min_DCF / k, 4)
     complete_CM = ConfMat(final_predictions, labels)
-    BayesErrorPlot(final_S, labels, complete_CM, Cfn, Cfp)
+    #BayesErrorPlot(final_S, labels, complete_CM, Cfn, Cfp)
     # bayes_error_plot(final_S, labels, ["GMM"], final_predictions)
     if model == "regression" and final:
         final_w /= k
