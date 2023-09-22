@@ -49,134 +49,134 @@ if __name__ == "__main__":
     q=[0,1]
     k=5
     
-    for i in q:       
-        minDCFvalues5=[]
-        minDCFvalues3=[]
-        minDCFvalues7=[]
-        for p in pi:
+    # for i in q:       
+    #     minDCFvalues5=[]
+    #     minDCFvalues3=[]
+    #     minDCFvalues7=[]
+    #     for p in pi:
             
-            for l in l_list:
-                [_, _, accuracy, DCFnorm, minDCF] = ML.k_fold(
-                    k,
-                    full_train_att,
-                    full_train_label,
-                    priorProb,
-                    "regression",
-                    l=l,
-                    pi=p,
-                    quadratic=i,
+    #         for l in l_list:
+    #             [_, _, accuracy, DCFnorm, minDCF] = ML.k_fold(
+    #                 k,
+    #                 full_train_att,
+    #                 full_train_label,
+    #                 priorProb,
+    #                 "regression",
+    #                 l=l,
+    #                 pi=p,
+    #                 quadratic=i,
     
-                )
-                if p== 0.5:
-                    minDCFvalues5.append(minDCF)
-                if p== 0.3:
-                    minDCFvalues3.append(minDCF)
-                if p== 0.7:
-                    minDCFvalues7.append(minDCF)
+    #             )
+    #             if p== 0.5:
+    #                 minDCFvalues5.append(minDCF)
+    #             if p== 0.3:
+    #                 minDCFvalues3.append(minDCF)
+    #             if p== 0.7:
+    #                 minDCFvalues7.append(minDCF)
 
-        if i==1:
-            print(f"Quadratic regression with k-fold = {k}")
-        if i==0:
-            print(f"Logarithmic regression with k-fold = {k}")
-        plt.figure(figsize=(10, 6))
-        plt.semilogx(l_list, minDCFvalues5, label=f'π= 0.5')
-        plt.semilogx(l_list, minDCFvalues3, label=f'π= 0.3')
-        plt.semilogx(l_list, minDCFvalues7, label=f'π= 0.7')
-        plt.xlabel('lambda')
-        plt.ylabel('minDCF')
-        if i==0:
-         plt.title('Logarithmic regression')
-        if i==1:
-         plt.title('Quadratic regression')
-        plt.legend()
-        plt.show()
+    #     if i==1:
+    #         print(f"Quadratic regression with k-fold = {k}")
+    #     if i==0:
+    #         print(f"Logarithmic regression with k-fold = {k}")
+    #     plt.figure(figsize=(10, 6))
+    #     plt.semilogx(l_list, minDCFvalues5, label=f'π= 0.5')
+    #     plt.semilogx(l_list, minDCFvalues3, label=f'π= 0.3')
+    #     plt.semilogx(l_list, minDCFvalues7, label=f'π= 0.7')
+    #     plt.xlabel('lambda')
+    #     plt.ylabel('minDCF')
+    #     if i==0:
+    #      plt.title('Logarithmic regression')
+    #     if i==1:
+    #      plt.title('Quadratic regression')
+    #     plt.legend()
+    #     plt.show()
         
-    # #Z-norm
+    # # #Z-norm
     standard_deviation = np.std(full_train_att)
     z_data = ML.center_data(full_train_att) / standard_deviation      
-    for i in q:       
-        minDCFvalues5=[]
-        minDCFvalues3=[]
-        minDCFvalues7=[]
-        for p in pi:
+    # for i in q:       
+    #     minDCFvalues5=[]
+    #     minDCFvalues3=[]
+    #     minDCFvalues7=[]
+    #     for p in pi:
             
-            for l in l_list:
-                [_, _, accuracy, DCFnorm, minDCF] = ML.k_fold(
-                    k,
-                    z_data,
-                    full_train_label,
-                    priorProb,
-                    "regression",
-                    l=l,
-                    pi=p,
-                    quadratic=i,
+    #         for l in l_list:
+    #             [_, _, accuracy, DCFnorm, minDCF] = ML.k_fold(
+    #                 k,
+    #                 z_data,
+    #                 full_train_label,
+    #                 priorProb,
+    #                 "regression",
+    #                 l=l,
+    #                 pi=p,
+    #                 quadratic=i,
     
-                )
-                if p== 0.5:
-                    minDCFvalues5.append(minDCF)
-                if p== 0.3:
-                    minDCFvalues3.append(minDCF)
-                if p== 0.7:
-                    minDCFvalues7.append(minDCF)
+    #             )
+    #             if p== 0.5:
+    #                 minDCFvalues5.append(minDCF)
+    #             if p== 0.3:
+    #                 minDCFvalues3.append(minDCF)
+    #             if p== 0.7:
+    #                 minDCFvalues7.append(minDCF)
 
-        if i==1:
-            print(f"Quadratic regression Z-norm ")
-        if i==0:
-            print(f"Logarithmic regression Z-norm ")
-        plt.figure(figsize=(10, 6))
-        plt.semilogx(l_list, minDCFvalues5, label=f'π= 0.5')
-        plt.semilogx(l_list, minDCFvalues3, label=f'π= 0.3')
-        plt.semilogx(l_list, minDCFvalues7, label=f'π= 0.7')
-        plt.xlabel('lambda')
-        plt.ylabel('minDCF')
-        if i==0:
-         plt.title('Logarithmic regression Z-norm')
-        if i==1:
-         plt.title('Quadratic regression Z-norm')
-        plt.legend()
-        plt.show()
-    for i in q:       
-        minDCFvalues5=[]
-        minDCFvalues3=[]
-        minDCFvalues7=[]
-        for p in pi:
+    #     if i==1:
+    #         print(f"Quadratic regression Z-norm ")
+    #     if i==0:
+    #         print(f"Logarithmic regression Z-norm ")
+    #     plt.figure(figsize=(10, 6))
+    #     plt.semilogx(l_list, minDCFvalues5, label=f'π= 0.5')
+    #     plt.semilogx(l_list, minDCFvalues3, label=f'π= 0.3')
+    #     plt.semilogx(l_list, minDCFvalues7, label=f'π= 0.7')
+    #     plt.xlabel('lambda')
+    #     plt.ylabel('minDCF')
+    #     if i==0:
+    #      plt.title('Logarithmic regression Z-norm')
+    #     if i==1:
+    #      plt.title('Quadratic regression Z-norm')
+    #     plt.legend()
+    #     plt.show()
+    # for i in q:       
+    #     minDCFvalues5=[]
+    #     minDCFvalues3=[]
+    #     minDCFvalues7=[]
+    #     for p in pi:
             
-            for l in l_list:
-                [_, _, accuracy, DCFnorm, minDCF] = ML.k_fold(
-                    k,
-                    full_train_att,
-                    full_train_label,
-                    priorProb,
-                    "regression",
-                    PCA_m=11,
-                    l=l,
-                    pi=p,
-                    quadratic=i,
+    #         for l in l_list:
+    #             [_, _, accuracy, DCFnorm, minDCF] = ML.k_fold(
+    #                 k,
+    #                 full_train_att,
+    #                 full_train_label,
+    #                 priorProb,
+    #                 "regression",
+    #                 PCA_m=11,
+    #                 l=l,
+    #                 pi=p,
+    #                 quadratic=i,
     
-                )
-                if p== 0.5:
-                    minDCFvalues5.append(minDCF)
-                if p== 0.3:
-                    minDCFvalues3.append(minDCF)
-                if p== 0.7:
-                    minDCFvalues7.append(minDCF)
+    #             )
+    #             if p== 0.5:
+    #                 minDCFvalues5.append(minDCF)
+    #             if p== 0.3:
+    #                 minDCFvalues3.append(minDCF)
+    #             if p== 0.7:
+    #                 minDCFvalues7.append(minDCF)
 
-        if i==1:
-            print(f"Quadratic regression PCA 11")
-        if i==0:
-            print(f"Logarithmic regression PCA 11 ")
-        plt.figure(figsize=(10, 6))
-        plt.semilogx(l_list, minDCFvalues5, label=f'π= 0.5')
-        plt.semilogx(l_list, minDCFvalues3, label=f'π= 0.3')
-        plt.semilogx(l_list, minDCFvalues7, label=f'π= 0.7')
-        plt.xlabel('lambda')
-        plt.ylabel('minDCF')
-        if i==0:
-         plt.title('Logarithmic regression PCA 11')
-        if i==1:
-         plt.title('Quadratic regression PCA 11')
-        plt.legend()
-        plt.show()  
+    #     if i==1:
+    #         print(f"Quadratic regression PCA 11")
+    #     if i==0:
+    #         print(f"Logarithmic regression PCA 11 ")
+    #     plt.figure(figsize=(10, 6))
+    #     plt.semilogx(l_list, minDCFvalues5, label=f'π= 0.5')
+    #     plt.semilogx(l_list, minDCFvalues3, label=f'π= 0.3')
+    #     plt.semilogx(l_list, minDCFvalues7, label=f'π= 0.7')
+    #     plt.xlabel('lambda')
+    #     plt.ylabel('minDCF')
+    #     if i==0:
+    #      plt.title('Logarithmic regression PCA 11')
+    #     if i==1:
+    #      plt.title('Quadratic regression PCA 11')
+    #     plt.legend()
+    #     plt.show()  
     
       
     searchL=float(input("Enter a lambda value you want to search for: "))
@@ -185,9 +185,9 @@ if __name__ == "__main__":
     "π=0.5 DCF/minDCF",
     "π=0.3 DCF/minDCF",
     "π=0.7 DCF/minDCF",
-    "π=0.5 Z-min DCF/minDCF",
-    "π=0.3 Z-min DCF/minDCF",
-    "π=0.7 Z-min DCF/minDCF",
+    "π=0.5 Z-norm DCF/minDCF",
+    "π=0.3 Z-norm DCF/minDCF",
+    "π=0.7 Z-norm DCF/minDCF",
     ]
     pit = [0.5,0.3,0.7]
     cont = 0
