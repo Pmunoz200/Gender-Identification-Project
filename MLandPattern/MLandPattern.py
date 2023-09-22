@@ -276,7 +276,6 @@ def logLikelihood(X, mu, c, tot=0):
     :param tot: flag to define if it returns value per datapoint, or total sum of logLikelihood (default is False)
     :return: the logarithm of the likelihood of the datapoints, and the associated gaussian density
     """
-    M = c.shape[1]
     logN = logpdf_GAU_ND(X, mu, c)
     if tot:
         return logN.sum()
@@ -486,7 +485,7 @@ def Naive_log_classifier(
     return S, predictions, acc
 
 
-def TiedGaussian(train_data, train_labels, test_data, prior_probability, test_label=[]):
+def TiedGaussian(train_data, train_labels, test_data, prior_probability, test_label=[], final = 0):
     """
     Calculates the model of the Tied Gaussian classifier for a set of data, and applyes it to a test dataset
     :param train_date: matrix of the datapoints of a dataset used to train the model
@@ -520,7 +519,10 @@ def TiedGaussian(train_data, train_labels, test_data, prior_probability, test_la
         # print(f"Accuracy: {acc}")
         # print(f"Error: {1 - acc}")
 
-    return S, predictions, acc
+    if final:
+        return S, predictions, acc, multi_mu, with_cov
+    else:
+        return S, predictions, acc
 
 
 def Tied_Naive_classifier(
@@ -614,10 +616,15 @@ def Generative_models(
             train_attributes, train_labels, test_attributes, prior_prob, test_labels
         )
     elif model.lower() == "tied gaussian":
-        [Probabilities, Prediction, accuracy] = TiedGaussian(
+        if final:
+            [Probabilities, Prediction, accuracy, mu, cov] = TiedGaussian(
+            train_attributes, train_labels, test_attributes, prior_prob, test_labels, final=final
+            )
+        else:
+            [Probabilities, Prediction, accuracy] = TiedGaussian(
             train_attributes, train_labels, test_attributes, prior_prob, test_labels
-        )
-        accuracy = round(accuracy * 100, 2)
+            )
+            accuracy = round(accuracy * 100, 2)
     elif model.lower() == "tied naive":
         [Probabilities, Prediction, accuracy] = Tied_Naive_classifier(
             train_attributes, train_labels, test_attributes, prior_prob, test_labels
@@ -671,9 +678,9 @@ def Generative_models(
             psi=psi,
             tied=1,
         )
-    if final and model == "mvg":
+    if final and model.lower() == "mvg" or model.lower() == "tied gaussian":
         return Probabilities, Prediction, accuracy, mu, cov
-    elif final and model == "gmm":
+    elif final and model.lower() == "gmm":
         return Probabilities, Prediction, accuracy, mu, cov, w
     else:
         return Probabilities, Prediction, accuracy
@@ -751,9 +758,6 @@ def k_fold(
                     )
                     final_w = w
                     final_b = b
-                    final_PCA = P
-                    if LDA_m:
-                        final_LDA = W
                 else:
                     [prediction, S, acc] = binaryRegression(
                         train_att,
@@ -765,7 +769,7 @@ def k_fold(
                         pit=pit
                     )
             else:
-                if final:
+                if final and model != "gmm":
                     [S, prediction, acc, mu, cov] = Generative_models(
                         train_att,
                         train_labels,
@@ -781,6 +785,22 @@ def k_fold(
                     final_w = P
                     final_mu = mu
                     final_cov = cov
+                elif final:
+                    [S, prediction, acc, mu, cov, w] = Generative_models(
+                    train_att,
+                    train_labels,
+                    validation_att,
+                    previous_prob,
+                    validation_labels,
+                    model,
+                    niter=niter,
+                    psi=psi,
+                    alpha=alpha,
+                    final=final,
+                )
+                    final_mu = mu
+                    final_cov = cov
+                    final_w = w
                 else:
                     [S, prediction, acc] = Generative_models(
                         train_att,
@@ -833,7 +853,6 @@ def k_fold(
                 )
                 final_w += w
                 final_b += b
-                final_PCA += P
                 if LDA_m:
                     final_LDA += W
             else:
@@ -847,7 +866,7 @@ def k_fold(
                     pit=pit
                 )
         else:
-            if final:
+            if final and model.lower() != "gmm":
                 [S, prediction, acc, mu, cov] = Generative_models(
                     train_att,
                     train_labels,
@@ -863,6 +882,22 @@ def k_fold(
                 final_mu += mu
                 final_cov += cov
                 final_w += P
+            elif final:
+                [S, prediction, acc, mu, cov, w] = Generative_models(
+                    train_att,
+                    train_labels,
+                    validation_att,
+                    previous_prob,
+                    validation_labels,
+                    model,
+                    niter=niter,
+                    psi=psi,
+                    alpha=alpha,
+                    final=final,
+                )
+                final_mu += mu
+                final_cov += cov
+                final_w += w
             else:
                 [S, prediction, acc] = Generative_models(
                     train_att,
@@ -884,17 +919,15 @@ def k_fold(
         final_S = np.hstack((final_S, S))
         final_predictions = np.append(final_predictions, prediction)
         print(final_S.shape)
-    (_, FPRlist, FNRlist, _) = minCostBayes(final_S, labels, pi, Cfn, Cfp)
-    ROCcurve(FPRlist, FNRlist, model)
+    # (_, FPRlist, FNRlist, _) = minCostBayes(final_S, labels, pi, Cfn, Cfp)
+    # ROCcurve(FPRlist, FNRlist, model)
     final_acc = round(final_acc / k, 4)
     final_DCF = round(final_DCF / k, 4)
     final_min_DCF = round(final_min_DCF / k, 4)
-    BayesErrorPlot(final_S, labels, Cfn, Cfp, model)
-    # bayes_error_plot(final_S, labels, ["GMM"], final_predictions)
+    # BayesErrorPlot(final_S, labels, Cfn, Cfp, model)
     if model == "regression" and final:
         final_w /= k
         final_b /= k
-        final_PCA /= k
         if LDA_m:
             final_LDA /= k
             return (
@@ -905,8 +938,6 @@ def k_fold(
                 final_min_DCF,
                 final_w,
                 final_b,
-                final_PCA,
-                final_LDA,
             )
         return (
             final_S,
@@ -915,8 +946,7 @@ def k_fold(
             final_DCF,
             final_min_DCF,
             final_w,
-            final_b,
-            final_PCA,
+            final_b
         )
     elif final:
         final_mu /= k
@@ -933,7 +963,7 @@ def k_fold(
             final_w,
         )
     else:
-        return final_S, prediction, final_acc, final_DCF, final_min_DCF, labels
+        return final_S, prediction, final_acc, final_DCF, final_min_DCF
 
 
 def logreg_obj(v, DTR, LTR, l, pit):
@@ -991,8 +1021,8 @@ def binaryRegression(
     :param l: Hyperparameter l to apply to the function
     :param test_attributes: Matrix with all the train attributes
     :param test_labels: Matrix with all the train labels
-    :return S: matrix associated with the probability array
     :return predictions: Vector associated with the prediction of the class for each test data point
+    :return S: matrix associated with the probability array
     :return acc: Accuracy of the validation set
     """
     
@@ -1114,7 +1144,7 @@ def svm(
         alp,
         args=(training_att, training_labels, K, dim, c, eps, gamma, model),
         bounds=constrain,
-        factr=100000000   
+        factr=1000000000   
     )
     zi = 2 * training_labels - 1
     kern = model.lower()
@@ -1286,7 +1316,7 @@ def BayesErrorPlot(llr,labels, Cfn, Cfp, model):
     plt.ylim([0, 1.1])
     plt.xlim([-4, 4])
     plt.legend(loc='upper left', ncols=1)
-    plt.savefig(f"Image/Bayes-{model}.png")
+    # plt.savefig(f"Image/Bayes-{model}.png")
     plt.show()
 
 
