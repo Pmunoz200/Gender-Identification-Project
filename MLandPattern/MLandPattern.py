@@ -888,11 +888,9 @@ def k_fold(
     # (_, FPRlist, FNRlist, _) = minCostBayes(final_S, labels, pi, Cfn, Cfp)
     # ROCcurve(FPRlist, FNRlist)
     final_acc = round(final_acc / k, 4)
-    final_S /= k
     final_DCF = round(final_DCF / k, 4)
     final_min_DCF = round(final_min_DCF / k, 4)
-    complete_CM = ConfMat(final_predictions, labels)
-    BayesErrorPlot(final_S, labels, complete_CM, Cfn, Cfp)
+    BayesErrorPlot(final_S, labels, Cfn, Cfp)
     # bayes_error_plot(final_S, labels, ["GMM"], final_predictions)
     if model == "regression" and final:
         final_w /= k
@@ -936,7 +934,7 @@ def k_fold(
             final_w,
         )
     else:
-        return final_S, prediction, final_acc, final_DCF, final_min_DCF
+        return final_S, prediction, final_acc, final_DCF, final_min_DCF, labels
 
 
 def logreg_obj(v, DTR, LTR, l, pit):
@@ -1167,9 +1165,8 @@ def calculate_model(S, test_points, model, prior_probability, test_labels=[]):
 
 
 def ConfMat(decisions, actual):
-    labels = np.unique(actual)
-
-    matrix = np.zeros((len(labels), len(labels)), dtype=int)
+    # labels = np.unique(actual)
+    # matrix = np.zeros((len(labels), len(labels)), dtype=int)
     tp = np.sum(np.logical_and(decisions == 1, actual == 1))
     fp = np.sum(np.logical_and(decisions == 1, actual == 0))
     tn = np.sum(np.logical_and(decisions == 0, actual == 0))
@@ -1271,7 +1268,7 @@ def minCostBayes(llr, labels, pi, Cfn, Cfp):
 
     return minDCF, FPRlist, FNRlist, minT
 
-def BayesErrorPlot(llr,labels,confusion_matrix, Cfn, Cfp):
+def BayesErrorPlot(llr,labels, Cfn, Cfp):
     effPriorLogOdds = np.linspace(-4, 4,30)
     DCFlist = []
     minDCFlist = []
@@ -1282,7 +1279,6 @@ def BayesErrorPlot(llr,labels,confusion_matrix, Cfn, Cfp):
         (minDCF,_,_, _)=minCostBayes(llr,labels, p, Cfn,Cfp)
         DCFlist=np.append(DCFlist,DCFnorm)
         minDCFlist=np.append(minDCFlist,minDCF)
-    print(DCFlist.shape)
     plt.plot(effPriorLogOdds, DCFlist, label='DCF', color='r')
     plt.plot(effPriorLogOdds, minDCFlist, label='min DCF', color='b')
         
@@ -1293,49 +1289,6 @@ def BayesErrorPlot(llr,labels,confusion_matrix, Cfn, Cfp):
     # plt.savefig(f"{os.getcwd()}/Image/Bayes-Min-Tied.png")
     plt.show()
 
-def bayes_error_plot(scores, y_test, submodels, pred, c=[[0,1],[1,0]], precision=0.25, effPriorLB=-5, effPriorUB=5, save_image=True, filename="bayes_error_plot"):
-    """
-    Plots the Bayes error given the log-likelihood ratio, the expected values, the cost matrix and the precision of the threshold.
-
-    Parameters
-    ----------
-    scores: log-likelihood ratio
-    y_test: expected values
-    c: cost matrix
-    precision: precision of the threshold
-    effPriorLB: lower bound of the logarithmic effective prior
-    effPriorUB: upper bound of the logarithmic effective prior
-    save_image: save image (True) or show image (False)
-    filename: name of the image
-    """
-    effPriorLogOdds=np.arange(effPriorLB,effPriorUB+precision,step=precision)
-    colors=["blue","green","red","purple","brown","pink","gray","olive","cyan"]
-    plt.figure()
-    for i in range(len(scores)):
-        dcf=[]
-        mindcf=[]
-        effPriors=[]
-        for p in effPriorLogOdds:
-            eff=np.exp(p)/(1+np.exp(p))
-            effPi=[1-eff, eff]
-            effPriors.append(effPi)
-            cm=ConfMat(pred, y_test)
-            (_,DCFnorm)=Bayes_risk(cm, i, 1, 1)
-            dcf.append(DCFnorm)
-            (minDCF,_,_, _)=minCostBayes(scores,y_test, p, 1, 1)
-            mindcf.append(minDCF)
-        plt.plot(effPriorLogOdds, dcf, label=submodels[i]+" (act. DCF)", color=colors[i])
-        plt.plot(effPriorLogOdds, mindcf, label=submodels[i]+" (min. DCF)",linestyle="dashed", color=colors[i])
-    plt.legend()
-    plt.ylim([0, 1])
-    plt.xlim([effPriorLB, effPriorUB])
-    plt.xlabel("threshold")
-    plt.ylabel("minDCF")
-    #print("effPrior of min:",effPriors[mindcf.index(min(mindcf))])
-    if save_image:
-        plt.savefig(filename+".png")
-    else:
-        plt.show()
 
 def ROCcurve(FPRlist,FNRlist):
     TPR=1-FNRlist
