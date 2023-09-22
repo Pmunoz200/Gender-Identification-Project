@@ -885,12 +885,12 @@ def k_fold(
         final_S = np.hstack((final_S, S))
         final_predictions = np.append(final_predictions, prediction)
         print(final_S.shape)
-    # (_, FPRlist, FNRlist, _) = minCostBayes(final_S, labels, pi, Cfn, Cfp)
-    # ROCcurve(FPRlist, FNRlist)
+    (_, FPRlist, FNRlist, _) = minCostBayes(final_S, labels, pi, Cfn, Cfp)
+    ROCcurve(FPRlist, FNRlist, model)
     final_acc = round(final_acc / k, 4)
     final_DCF = round(final_DCF / k, 4)
     final_min_DCF = round(final_min_DCF / k, 4)
-    BayesErrorPlot(final_S, labels, Cfn, Cfp)
+    BayesErrorPlot(final_S, labels, Cfn, Cfp, model)
     # bayes_error_plot(final_S, labels, ["GMM"], final_predictions)
     if model == "regression" and final:
         final_w /= k
@@ -1269,7 +1269,7 @@ def minCostBayes(llr, labels, pi, Cfn, Cfp):
 
     return minDCF, FPRlist, FNRlist, minT
 
-def BayesErrorPlot(llr,labels, Cfn, Cfp):
+def BayesErrorPlot(llr,labels, Cfn, Cfp, model):
     effPriorLogOdds = np.linspace(-4, 4,30)
     DCFlist = []
     minDCFlist = []
@@ -1287,18 +1287,19 @@ def BayesErrorPlot(llr,labels, Cfn, Cfp):
     plt.ylim([0, 1.1])
     plt.xlim([-4, 4])
     plt.legend(loc='upper left', ncols=1)
-    # plt.savefig(f"{os.getcwd()}/Image/Bayes-Min-Tied.png")
+    plt.savefig(f"Image/Bayes-{model}.png")
     plt.show()
 
 
-def ROCcurve(FPRlist,FNRlist):
+def ROCcurve(FPRlist,FNRlist, model):
     TPR=1-FNRlist
     
     plt.figure()
     plt.plot(FPRlist, TPR)
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
-    plt.title('ROC Curve')
+    plt.title(f'{model} ROC Curve')
+    plt.savefig(f"Image/Roc-{model}.png")
     plt.show()
 
 def ll_gaussian(x, mu, C):
