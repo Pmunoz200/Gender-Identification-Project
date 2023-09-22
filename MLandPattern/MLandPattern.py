@@ -3,6 +3,7 @@ import pandas as pd
 import scipy
 import math
 from matplotlib import pyplot as plt
+import os
 
 
 def loadCSV(pathname, class_label, attribute_names):
@@ -799,6 +800,7 @@ def k_fold(
             final_min_DCF = minDCF
             final_acc = acc
             final_S = S
+            final_predictions = prediction
             continue
         low += section_size
         high += section_size
@@ -879,11 +881,19 @@ def k_fold(
         final_DCF += DCFnorm
         final_min_DCF += minDCF
         final_acc += acc
-        final_S += S
+        print(S.shape)
+        final_S = np.hstack((final_S, S))
+        final_predictions = np.append(final_predictions, prediction)
+        print(final_S.shape)
+    # (_, FPRlist, FNRlist, _) = minCostBayes(final_S, labels, pi, Cfn, Cfp)
+    # ROCcurve(FPRlist, FNRlist)
     final_acc = round(final_acc / k, 4)
     final_S /= k
     final_DCF = round(final_DCF / k, 4)
     final_min_DCF = round(final_min_DCF / k, 4)
+    complete_CM = ConfMat(final_predictions, labels)
+    BayesErrorPlot(final_S, labels, complete_CM, Cfn, Cfp)
+    # bayes_error_plot(final_S, labels, ["GMM"], final_predictions)
     if model == "regression" and final:
         final_w /= k
         final_b /= k
@@ -1138,16 +1148,18 @@ def svm(
 
 def calculate_model(S, test_points, model, prior_probability, test_labels=[]):
     model = model.lower()
-    funct = lambda s: 1 if s > 0 else 0
-    if model == "Generative":
+    if model == "generative":
         logSJoint = S + np.log(prior_probability)
         logSMarginal = vrow(scipy.special.logsumexp(logSJoint, axis=0))
         logSPost = logSJoint - logSMarginal
         SPost = np.exp(logSPost)
         predictions = np.argmax(SPost, axis=0)
+        return predictions
     elif model == "regression":
+        funct = lambda s: 1 if s > 0 else 0
         predictions = np.array(list(map(funct, S)))
     else:
+        funct = lambda s: 1 if s > 0 else 0
         predictions = np.array(list(map(funct, S)))
     if len(test_labels) != 0:
         error = np.abs(test_labels - predictions)
@@ -1156,7 +1168,7 @@ def calculate_model(S, test_points, model, prior_probability, test_labels=[]):
 
 
 def ConfMat(decisions, actual):
-    labels = np.unique(np.concatenate((actual, decisions)))
+    labels = np.unique(actual)
 
     matrix = np.zeros((len(labels), len(labels)), dtype=int)
     tp = np.sum(np.logical_and(decisions == 1, actual == 1))
@@ -1170,9 +1182,11 @@ def ConfMat(decisions, actual):
 
 
 def OptimalBayes(llr, labels, pi, Cfn, Cfp):
-    log_odds = llr
+    if llr.ndim > 1:
+        llr = llr[1, :] - llr[0,:]
     threshold = -np.log((pi * Cfn) / ((1 - pi) * Cfp))
-    decisions = np.where(log_odds > threshold, 1, 0)
+    funct = lambda s: 1 if s > threshold else 0
+    decisions = np.array(list(map(funct, llr)))
 
     tp = np.sum(np.logical_and(decisions == 1, labels == 1))
     fp = np.sum(np.logical_and(decisions == 1, labels == 0))
@@ -1181,7 +1195,7 @@ def OptimalBayes(llr, labels, pi, Cfn, Cfp):
 
     confusion_matrix = np.array([[tn, fn], [fp, tp]])
 
-    return confusion_matrix
+    return confusion_matrix, decisions
 
 
 def Bayes_risk(confusion_matrix, pi, Cfn, Cfp):
@@ -1205,12 +1219,12 @@ def Bayes_risk(confusion_matrix, pi, Cfn, Cfp):
 
     DCFnorm = DCF / B
 
-    return DCF, round(DCFnorm, 2)
+    return DCF, DCFnorm
 
 
 def minCostBayes(llr, labels, pi, Cfn, Cfp):
     if llr.ndim > 1:
-        llr = (Cfn * llr[0, :]) / (Cfp * llr[1, :])
+        llr = llr[1, :] - llr[0,:]
     sortedLLR = np.sort(llr)
     # sortedLLR = pi * sortedLLR[0, :] / ((1 - pi) * sortedLLR[1, :])
     t = np.array([-np.inf, np.inf])
@@ -1258,6 +1272,81 @@ def minCostBayes(llr, labels, pi, Cfn, Cfp):
 
     return minDCF, FPRlist, FNRlist, minT
 
+def BayesErrorPlot(llr,labels,confusion_matrix, Cfn, Cfp):
+    effPriorLogOdds = np.linspace(-4, 4,30)
+    DCFlist = []
+    minDCFlist = []
+    for effP in effPriorLogOdds:
+        p = np.exp(effP)/(1+np.exp(effP))
+        [conf_matrix, _] = OptimalBayes(llr, labels, p, Cfn, Cfp)
+        (_, DCFnorm)=Bayes_risk(conf_matrix, p, Cfn, Cfp)
+        (minDCF,_,_, _)=minCostBayes(llr,labels, p, Cfn,Cfp)
+        DCFlist=np.append(DCFlist,DCFnorm)
+        minDCFlist=np.append(minDCFlist,minDCF)
+    print(DCFlist.shape)
+    plt.plot(effPriorLogOdds, DCFlist, label='DCF', color='r')
+    plt.plot(effPriorLogOdds, minDCFlist, label='min DCF', color='b')
+        
+    plt.ylabel("DCF")
+    plt.ylim([0, 1.1])
+    plt.xlim([-4, 4])
+    plt.legend(loc='upper left', ncols=1)
+    # plt.savefig(f"{os.getcwd()}/Image/Bayes-Min-Tied.png")
+    plt.show()
+
+def bayes_error_plot(scores, y_test, submodels, pred, c=[[0,1],[1,0]], precision=0.25, effPriorLB=-5, effPriorUB=5, save_image=True, filename="bayes_error_plot"):
+    """
+    Plots the Bayes error given the log-likelihood ratio, the expected values, the cost matrix and the precision of the threshold.
+
+    Parameters
+    ----------
+    scores: log-likelihood ratio
+    y_test: expected values
+    c: cost matrix
+    precision: precision of the threshold
+    effPriorLB: lower bound of the logarithmic effective prior
+    effPriorUB: upper bound of the logarithmic effective prior
+    save_image: save image (True) or show image (False)
+    filename: name of the image
+    """
+    effPriorLogOdds=np.arange(effPriorLB,effPriorUB+precision,step=precision)
+    colors=["blue","green","red","purple","brown","pink","gray","olive","cyan"]
+    plt.figure()
+    for i in range(len(scores)):
+        dcf=[]
+        mindcf=[]
+        effPriors=[]
+        for p in effPriorLogOdds:
+            eff=np.exp(p)/(1+np.exp(p))
+            effPi=[1-eff, eff]
+            effPriors.append(effPi)
+            cm=ConfMat(pred, y_test)
+            (_,DCFnorm)=Bayes_risk(cm, i, 1, 1)
+            dcf.append(DCFnorm)
+            (minDCF,_,_, _)=minCostBayes(scores,y_test, p, 1, 1)
+            mindcf.append(minDCF)
+        plt.plot(effPriorLogOdds, dcf, label=submodels[i]+" (act. DCF)", color=colors[i])
+        plt.plot(effPriorLogOdds, mindcf, label=submodels[i]+" (min. DCF)",linestyle="dashed", color=colors[i])
+    plt.legend()
+    plt.ylim([0, 1])
+    plt.xlim([effPriorLB, effPriorUB])
+    plt.xlabel("threshold")
+    plt.ylabel("minDCF")
+    #print("effPrior of min:",effPriors[mindcf.index(min(mindcf))])
+    if save_image:
+        plt.savefig(filename+".png")
+    else:
+        plt.show()
+
+def ROCcurve(FPRlist,FNRlist):
+    TPR=1-FNRlist
+    
+    plt.figure()
+    plt.plot(FPRlist, TPR)
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC Curve')
+    plt.show()
 
 def ll_gaussian(x, mu, C):
     M = mu[0].shape[0]

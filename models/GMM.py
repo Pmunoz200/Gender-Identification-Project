@@ -67,7 +67,6 @@ def call_GMM(attributes, labels, prior_probability, models, k_value=5, m = 0, pi
             tableGMM[0][c2].append(minDCF)
             perc += 1
             print(f"{round(perc * 100 / total_iter, 2)}%")
-        print(tableGMM)
         result_minDCF.append(minDCF)
         c2 += 1
     print()
@@ -135,7 +134,7 @@ if __name__ == "__main__":
     standard_deviation = np.std(full_train_att)
     z_data = ML.center_data(full_train_att) / standard_deviation
     print("Full data")
-    raw_values = call_GMM(full_train_att, full_train_label, priorProb, m=12, models=headers)
+    raw_values = call_GMM(full_train_att, full_train_label, priorProb, m=12, pi=pi, models=headers)
     print("Z-norm data")
-    z_values = call_GMM(z_data, full_train_label, priorProb, m=12, models=headers)
+    z_values = call_GMM(z_data, full_train_label, priorProb, m=12, pi=pi, models=headers)
     graph_data(raw_values, z_values, headers[0][0:3], pca=1)
