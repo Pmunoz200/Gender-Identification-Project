@@ -1115,6 +1115,7 @@ def svm(
         alp,
         args=(training_att, training_labels, K, dim, c, eps, gamma, model),
         bounds=constrain,
+        factr=10000   
     )
     zi = 2 * training_labels - 1
     kern = model.lower()
