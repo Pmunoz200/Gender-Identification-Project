@@ -53,7 +53,7 @@ def call_GMM(attributes, labels, prior_probability, models, k_value=5, m = 0, pi
         tableGMM[0].append([])
         for p in pi:
             if not m:
-                [S, pred, _, DCFnorm, minDCF, label] = ML.k_fold(
+                [S, pred, _, DCFnorm, minDCF] = ML.k_fold(
                 k_value, attributes, labels, prior_probability, model=mod, niter=constrains[1],alpha=constrains[0], psi=constrains[2], pi=p
                 )
             else:
@@ -65,7 +65,6 @@ def call_GMM(attributes, labels, prior_probability, models, k_value=5, m = 0, pi
             list_minDCF.append(minDCF)
             list_DCF.append(DCFnorm)
             print(f"{round(perc * 100 / total_iter, 2)}%")
-            np.save("./Python_code/Labels_k", label)
         result_minDCF.append(minDCF)
         c2 += 1
     cont = 1
