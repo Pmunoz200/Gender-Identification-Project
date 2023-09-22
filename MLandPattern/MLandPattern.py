@@ -3,6 +3,7 @@ import pandas as pd
 import scipy
 import math
 from matplotlib import pyplot as plt
+import os
 
 
 def loadCSV(pathname, class_label, attribute_names):
@@ -799,6 +800,7 @@ def k_fold(
             final_min_DCF = minDCF
             final_acc = acc
             final_S = S
+            final_predictions = prediction
             continue
         low += section_size
         high += section_size
@@ -879,11 +881,17 @@ def k_fold(
         final_DCF += DCFnorm
         final_min_DCF += minDCF
         final_acc += acc
-        final_S += S
+        print(S.shape)
+        final_S = np.hstack((final_S, S))
+        final_predictions = np.append(final_predictions, prediction)
+        print(final_S.shape)
     final_acc = round(final_acc / k, 4)
     final_S /= k
     final_DCF = round(final_DCF / k, 4)
     final_min_DCF = round(final_min_DCF / k, 4)
+    complete_CM = ConfMat(final_predictions, labels)
+    print(complete_CM.shape)
+    BayesErrorPlot(final_S, labels, complete_CM, Cfn, Cfp)
     if model == "regression" and final:
         final_w /= k
         final_b /= k
@@ -1137,16 +1145,18 @@ def svm(
 
 def calculate_model(S, test_points, model, prior_probability, test_labels=[]):
     model = model.lower()
-    funct = lambda s: 1 if s > 0 else 0
-    if model == "Generative":
+    if model == "generative":
         logSJoint = S + np.log(prior_probability)
         logSMarginal = vrow(scipy.special.logsumexp(logSJoint, axis=0))
         logSPost = logSJoint - logSMarginal
         SPost = np.exp(logSPost)
         predictions = np.argmax(SPost, axis=0)
+        return predictions
     elif model == "regression":
+        funct = lambda s: 1 if s > 0 else 0
         predictions = np.array(list(map(funct, S)))
     else:
+        funct = lambda s: 1 if s > 0 else 0
         predictions = np.array(list(map(funct, S)))
     if len(test_labels) != 0:
         error = np.abs(test_labels - predictions)
@@ -1257,6 +1267,28 @@ def minCostBayes(llr, labels, pi, Cfn, Cfp):
 
     return minDCF, FPRlist, FNRlist, minT
 
+def BayesErrorPlot(llr,labels,confusion_matrix, Cfn, Cfp):
+    DCFlist=[]
+    minDCFlist=[]
+    effPriorLogOdds = np.linspace(-3, 3,21)
+    prior=1/(1+np.exp(-effPriorLogOdds))
+    
+    for i in prior:
+        (_,DCFnorm)=Bayes_risk(confusion_matrix, i, Cfn, Cfp)
+        (minDCF,_,_, _)=minCostBayes(llr,labels,i,Cfn,Cfp)
+        DCFlist=np.append(DCFlist,DCFnorm)
+        minDCFlist=np.append(minDCFlist,minDCF)
+        
+        
+    plt.figure()
+    plt.plot(effPriorLogOdds, DCFlist, label='DCF', color='r')
+    plt.plot(effPriorLogOdds, minDCFlist, label='min DCF', color='b')
+    plt.ylabel("DCF")
+    plt.ylim([0, 1.1])
+    plt.xlim([-3, 3])
+    plt.legend(loc='upper left', ncols=3)
+    plt.savefig(f"{os.getcwd()}/Image/Bayes-Min-Tied.png")
+    plt.show()
 
 def ll_gaussian(x, mu, C):
     M = mu[0].shape[0]
