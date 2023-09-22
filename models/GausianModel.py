@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import os
+from matplotlib import pyplot as plt
 from tabulate import tabulate
 import sys
 
@@ -36,16 +37,17 @@ def split_db(D, L, fraction, seed=0):
     return (DTR, LTR), (DTE, LTE)
 
 
-def gaussian_train(attributes, labels, priorProb = 0, pi=[0.5], Cfn=1, Cfp=1):
+def gaussian_train(attributes, labels, headers, priorProb = 0, pi=[0.5], Cfn=1, Cfp=1):
     ### Parameter definition ###
     tableKFold = []
-    headers = ["MVG", "Naive", "Tied Gaussian", "Tied Naive"]
     priorProb = ML.vcol(np.ones(2) * 0.5) if not priorProb else priorProb
     ####
     tableKFold.append(["Full"])
     # k_fold_value = int(input("Value for k partitions: "))
     k_fold_value = 5
     c2 = 1
+    list_minDCF = []
+    list_DCF = []
     for model in headers:
         tableKFold[0].append([])
         for p in pi:
@@ -53,6 +55,8 @@ def gaussian_train(attributes, labels, priorProb = 0, pi=[0.5], Cfn=1, Cfp=1):
                 k_fold_value, attributes, labels, priorProb, model=model, pi=p
             )
             tableKFold[0][c2].append(minDCF)
+            list_minDCF.append(minDCF)
+            list_DCF.append(DCFnorm)
         c2 += 1
 
     cont = 1
@@ -71,6 +75,8 @@ def gaussian_train(attributes, labels, priorProb = 0, pi=[0.5], Cfn=1, Cfp=1):
                     PCA_m=i,
                 )
                 tableKFold[cont][c2].append(minDCF)
+                list_minDCF.append(minDCF)
+                list_DCF.append(DCFnorm)
             c2 += 1
         cont += 1
 
@@ -88,8 +94,9 @@ if __name__ == "__main__":
 
     standard_deviation = np.std(full_train_att)
     z_data = ML.center_data(full_train_att) / standard_deviation
-
+    models = ["MVG", "Naive", "Tied Gaussian", "Tied Naive"]
+    pi = [0.3, 0.5, 0.7]
     print("Full dataset")
-    gaussian_train(full_train_att, full_train_label, pi=[0.3,0.5,0.7])
+    gaussian_train(full_train_att, full_train_label,models, pi=pi)
     print("Z-Norm dataset")
-    gaussian_train(z_data, full_train_label,pi=[0.3,0.5,0.7])
+    gaussian_train(z_data, full_train_label, models,pi=pi)

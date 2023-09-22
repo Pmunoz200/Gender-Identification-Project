@@ -3,10 +3,7 @@ import pandas as pd
 import scipy
 import os
 from tabulate import tabulate
-import sys
 from matplotlib import pyplot as plt
-
-
 from MLandPattern import MLandPattern as ML
 
 
@@ -117,22 +114,24 @@ if __name__ == "__main__":
     [full_train_att, full_train_label] = load(path)
     print(os.getcwd())
     priorProb = ML.vcol(np.ones(2) * 0.5)
+    Cfn = 1
+    Cfp = 1
 
     # The headers define which models the code will train. It is a list of all the models to try, and the format is:
     # [model: [alpha, G, psi]], where psi and alpha are hyperparameters, and G corresponds to the amount of clusters,
     # which are defined as 2^G.
 
-    headers = [
-    "GMM:[0.1, 2, 0.01]",
-    ]
     # headers = [
-    # "GMM:[0.1, 0, 0.01]",
-    # "GMM:[0.1, 1, 0.01]",
     # "GMM:[0.1, 2, 0.01]",
-    # "GMM:[0.1, 3, 0.01]",
-    # "GMM:[0.1, 4, 0.01]",
-    # "GMM:[0.1, 5, 0.01]",
     # ]
+    headers = [
+    "GMM:[0.1, 0, 0.01]",
+    "GMM:[0.1, 1, 0.01]",
+    "GMM:[0.1, 2, 0.01]",
+    "GMM:[0.1, 3, 0.01]",
+    "GMM:[0.1, 4, 0.01]",
+    "GMM:[0.1, 5, 0.01]",
+    ]
     pi = [0.5]
     standard_deviation = np.std(full_train_att)
     z_data = ML.center_data(full_train_att) / standard_deviation
@@ -140,12 +139,11 @@ if __name__ == "__main__":
     print("Full data")
     [raw_values, S_raw] = call_GMM(full_train_att, full_train_label, priorProb, pi=pi, models=headers)
     np.save("./Score_GMM", S_raw)
-
     print(raw_values)
-    # pred_raw = ML.calculate_model(S_raw, full_train_att, "Generative", priorProb)
-    # conf_RAW = ML.ConfMat(pred_raw, full_train_label)
-    # ML.BayesErrorPlot(S_raw, full_train_label,conf_RAW,Cfn, Cfp)
-    # print("Z-norm data")
-    # [z_values, S_z] = call_GMM(z_data, full_train_label, priorProb, pi=pi, models=headers)
+    pred_raw = ML.calculate_model(S_raw, full_train_att, "Generative", priorProb)
+    conf_RAW = ML.ConfMat(pred_raw, full_train_label)
+    ML.BayesErrorPlot(S_raw, full_train_label,conf_RAW,Cfn, Cfp)
+    print("Z-norm data")
+    [z_values, S_z] = call_GMM(z_data, full_train_label, priorProb, pi=pi, models=headers)
 
 
