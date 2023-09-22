@@ -34,9 +34,6 @@ def histogram_1n(male, female, x_axis="", y_axis=""):
     plt.legend(class_label)
 
 
-def scatter_2d(spoofed, authentic, x_axis="", y_axis=""):
-    plt.scatter(spoofed[0], spoofed[1], edgecolors="blue", s=1.5,facecolors='none', alpha=alpha_val)
-    plt.scatter(authentic[0], authentic[1], edgecolors="red", facecolors='none', s=1.5, alpha=alpha_val)
 
 
 
@@ -52,28 +49,7 @@ def graficar(attributes):
             attributes[i, labels == 1],
         ]
 
-
     cont = 1
-    # dims = [9, 3]
-
-    # d_ant = 0
-    # for d in dims:
-    #     length = int(d/3)
-    #     for i in range(d_ant, d + d_ant):
-    #         plt.subplot(length, 3, cont)
-    #         histogram_1n(values_histogram[attribute_names[i]][0],values_histogram[attribute_names[i]][1])
-    #         plt.title(f"Features Dim. {i+1}")
-    #         plt.subplots_adjust(left=0.05,
-    #                 bottom=0.11,
-    #                 right=0.963,
-    #                 top=0.88,
-    #                 wspace=0.17,
-    #                 hspace=0.265)
-    #         cont += 1
-    #     plt.savefig(f"{os.getcwd()}/Image/histograms-{d}.png")
-    #     plt.show()
-    #     cont = 1
-    #     d_ant=d
 
     for xk, xv in values_histogram.items():
         for yk, yv in values_histogram.items():
@@ -83,10 +59,6 @@ def graficar(attributes):
                 plt.savefig(f"{os.getcwd()}/Image/histogram-dim-{cont}.png")
                 plt.show()
                 cont += 1
-            # else:
-            #     plt.subplot(attributes.shape[0], attributes.shape[0], cont)
-            #     scatter_2d([xv[0], yv[0]], [xv[1], yv[1]], x_axis=xk, y_axis=yk)
-            #     cont += 1
 
 
 def graf_LDA(attributes, lables):
