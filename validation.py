@@ -64,7 +64,7 @@ def calculate_model(
         densities = []
         for i in np.unique(test_labels):
             densities.append(
-                ML.logLikelihood(test_points, ML.vcol(multi_mu[i, :]), cov[i])
+                ML.logLikelihood(test_points, ML.vcol(multi_mu[i, :]), cov)
             )
         S = np.array(densities)
         logSJoint = S + np.log(prior_probability)
@@ -104,7 +104,8 @@ def calculate_model(
         predictions = np.where(S > 0, 1, 0)
     confusion_matrix = ML.ConfMat(predictions, test_labels)
     DCF, DCFnorm = ML.Bayes_risk(confusion_matrix, pi, Cfn, Cfp)
-    (minDCF, _, _) = ML.minCostBayes(S, test_labels, pi, Cfn, Cfp)
+    (minDCF, _, _, _) = ML.minCostBayes(S, test_labels, pi, Cfn, Cfp)
+    ML.BayesErrorPlot(S, test_labels, Cfn, Cfp, model)
     error = np.abs(test_labels - predictions)
     error = np.sum(error) / test_labels.shape[0]
     return predictions, (1 - error), DCFnorm, minDCF
@@ -121,9 +122,9 @@ if __name__ == "__main__":
 
     k = 5
 
-    pathTrain = os.path.abspath("data/Train.txt")
+    pathTrain = os.path.abspath("Python_code/data/Train.txt")
     [full_train_att, full_train_label] = load(pathTrain)
-    pathTest = os.path.abspath("data/Test.txt")
+    pathTest = os.path.abspath("Python_code/data/Test.txt")
 
     [full_test_att, full_test_labels] = load(pathTest)
 
@@ -131,17 +132,18 @@ if __name__ == "__main__":
     tableTest.append([])
     tableTrain.append([])
 
-    [_, Predictions, accuracy, DCFnorm, minDCF, mu, cov, P] = ML.k_fold(
-        k, full_train_att, full_train_label, priorProb, model="Tied", final=1, PCA_m=12
-    )
-    tableTrain[0].append([accuracy, DCFnorm, minDCF])
-    [_,_, minDCF] = calculate_model([mu, cov], full_test_att, "Gaussian", priorProb, full_test_labels)
-    print(f"MVG {minDCF}")
-    print(f"{round(perc * 100 / tot_iter, 2)}%")
-    perc += 1
-    np.save("MVG-args", np.array([mu, cov]))
+    # [_, Predictions, accuracy, DCFnorm, minDCF, mu, cov, P] = ML.k_fold(
+    #     k, full_train_att, full_train_label, priorProb, model="tied gaussian", final=1, PCA_m=12
+    # )
+    # PCA_test = np.dot(P.T, full_test_att)
+    # tableTrain[0].append([accuracy, DCFnorm, minDCF])
+    # [_,_, _,minDCF] = calculate_model([mu, cov], PCA_test, "Gaussian", priorProb, full_test_labels)
+    # print(f"MVG {minDCF}")
+    # perc += 1
+    # mu = np.array([mu[0]])
+    # cov = np.array(cov)
 
-    [SPost, Predictions, accuracy, mu, cov, w] = ML.k_fold(
+    [SPost, Predictions, accuracy, DCF, minDCF, mu, cov, w] = ML.k_fold(
         k,
         full_train_att,
         full_train_label,
@@ -153,64 +155,30 @@ if __name__ == "__main__":
         final=1,
     )
 
-    np.save("GMM-args", np.array([mu, cov, w]))
 
-    [_, _, minDCF] = calculate_model([mu, cov, w], full_test_att, "gmm", priorProb, full_test_labels)
-    print(f"GMM: minDCF")
+    [_,_, _,minDCF] = calculate_model([mu, cov, w], full_test_att, "gmm", priorProb, full_test_labels)
+    print(f"GMM: {minDCF}")
 
-#     [Predictions, acc, DCFnorm, minDCF] = calculate_model(
-#         [mu, cov, w], full_test_att, "gmm", priorProb, full_test_labels
-#     )
-#     tableTest[0].append([round(acc * 100, 2), DCFnorm, minDCF])
-#     print(f"{round(perc * 100 / tot_iter, 2)}%")
-#     perc += 1
 
-#     [_, Predictions, accuracy, DCFnorm, minDCF, w, b, P, L] = ML.k_fold(
-#         20,
+#     [_, Predictions, accuracy, DCFnorm, minDCF, w, b] = ML.k_fold(
+#         k,
 #         full_train_att,
 #         full_train_label,
 #         priorProb,
 #         model="regression",
-#         PCA_m=8,
-#         LDA_m=3,
-#         l=10**-6,
+#         l=0.01,
 #         final=1,
+#         pi=0.5
 #     )
-#     tableTrain[0].append([accuracy, DCFnorm, minDCF])
-#     print(f"{round(perc * 100 / tot_iter, 2)}%")
-#     perc += 1
-#     LDA_test = np.dot(L.T, np.dot(P.T, full_test_att))
-#     [Predictions, acc, DCFnorm, minDCF] = calculate_model(
-#         [w, b], LDA_test, "regression", priorProb, full_test_labels
-#     )
-#     tableTest[0].append([round(acc * 100, 2), DCFnorm, minDCF])
-#     print(f"{round(perc * 100 / tot_iter, 2)}%")
-#     perc += 1
 
-#     [_, Predictions, accuracy, DCFnorm, minDCF, w, b, PQ] = ML.k_fold(
-#         20,
-#         full_train_att,
-#         full_train_label,
-#         priorProb,
-#         model="regression",
-#         PCA_m=7,
-#         l=10**-1,
-#         final=1,
-#         quadratic=1,
-#     )
-#     tableTrain[0].append([accuracy, DCFnorm, minDCF])
-#     print(f"{round(perc * 100 / tot_iter, 2)}%")
-#     perc += 1
-#     PCA_test = np.dot(PQ.T, full_test_att)
-#     [Predictions, acc, DCFnorm, minDCF] = calculate_model(
-#         [w, b], PCA_test, "quadratic", priorProb, full_test_labels
-#     )
-#     tableTest[0].append([round(acc * 100, 2), DCFnorm, minDCF])
-#     print(f"{round(perc * 100 / tot_iter, 2)}%")
-#     perc += 1
+#     # np.save(f"LDR-args", np.array([w, b]))
 
-# print("Training metrics")
-# print(tabulate(tableTrain, headers=headers))
-# print()
-# print("Testing metrics")
-# print(tabulate(tableTest, headers=headers))
+#     [_, _, _, minDCF] = calculate_model([w, b], full_test_att, "regression", priorProb, full_test_labels)    
+#     print(f"LDR: {minDCF}")
+
+
+# # print("Training metrics")
+# # print(tabulate(tableTrain, headers=headers))
+# # print()
+# # print("Testing metrics")
+# # print(tabulate(tableTest, headers=headers))
