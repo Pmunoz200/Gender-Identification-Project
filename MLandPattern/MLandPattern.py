@@ -160,7 +160,7 @@ def PCA(attribute_matrix, m):
     C = covariance(DC, 1)
     s, U = eigen(C)
     P = U[:, ::-1][:, 0:m]
-    return P, np.dot(P.T, attribute_matrix)
+    return P.T, np.dot(P.T, attribute_matrix)
 
 
 def covariance_within_class(matrix_values, label):
@@ -727,6 +727,7 @@ def k_fold(
     low = 0
     all_values = np.c_[attributes.T, labels]
     all_values = np.random.permutation(all_values)
+    #print(attributes.shape)
     attributes = all_values[:, 0:12].T
     labels = all_values[:, -1].astype("int32")
     high = section_size
@@ -918,7 +919,7 @@ def k_fold(
         final_acc += acc
         final_S = np.hstack((final_S, S))
         final_predictions = np.append(final_predictions, prediction)
-        print(final_S.shape)
+        #print(final_S.shape)
     # (_, FPRlist, FNRlist, _) = minCostBayes(final_S, labels, pi, Cfn, Cfp)
     # ROCcurve(FPRlist, FNRlist, model)
     final_acc = round(final_acc / k, 4)
