@@ -740,7 +740,7 @@ def k_fold(
             train_labels = labels[high:]
             if PCA_m:
                 P, train_att = PCA(train_att, PCA_m)
-                validation_att = np.dot(P.T, validation_att)
+                validation_att = np.dot(P, validation_att)
                 if LDA_m:
                     W, _ = LDA1(train_att, train_labels, LDA_m)
                     train_att = np.dot(W.T, train_att)
@@ -835,7 +835,7 @@ def k_fold(
         train_labels = np.hstack((train_labels, labels[high:]))
         if PCA_m:
             P, train_att = PCA(train_att, PCA_m)
-            validation_att = np.dot(P.T, validation_att)
+            validation_att = np.dot(P, validation_att)
             if LDA_m:
                 W, _ = LDA1(train_att, train_labels, LDA_m)
                 train_att = np.dot(W.T, train_att)
